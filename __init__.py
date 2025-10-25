@@ -15,8 +15,8 @@ bl_info = {
     "name": "MetaReForge-Lite",
     "author": "Mykyta Petrenko",
     "description": "",
-    "blender": (3, 6, 0),
-    "version": (0, 9, 0),
+    "blender": (4, 2, 0),
+    "version": (0, 9, 2),
     "location": "",
     "warning": "",
     "category": "Generic",
@@ -25,15 +25,13 @@ bl_info = {
 from . import (
     props,
     ops,
-    ui,
-    dev
+    ui
 )
 
 modules = [
     props,
     ops,
-    ui,
-    dev
+    ui
 ]
 
 

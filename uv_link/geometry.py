@@ -8,6 +8,8 @@ from .utils import transpose, dot
 from ..utils.mesh_json import get_active_uv_layer
 
 
+EPS = 1e-20
+
 
 class TransferInput:
     """
@@ -43,6 +45,8 @@ class TransferTriangle:
     def __init__(self, target_verts, source_verts, id: str = None) -> None:
         self.id = id
 
+        self.is_valid = True
+
         # Reformat data for further calculations
         self.source_verts = source_verts
         self.target_verts = target_verts
@@ -54,8 +58,8 @@ class TransferTriangle:
         self.bc_source = (self.c_source - self.b_source).length
         self.source_triangle_area = self.get_source_triangle_area()
 
-        if self.source_triangle_area <= 1e-9:
-            raise Exception('The triangle is degenerate')
+        if self.source_triangle_area <= 1e-10:
+            self.is_valid = False
 
         # Compute some variables that will be used to compute the barycentric coordinates of the point
         # multiple times
@@ -65,6 +69,9 @@ class TransferTriangle:
         self.d01 = dot(self.v0, self.v1)
         self.d11 = dot(self.v1, self.v1)
         self.denominator = self.d00 * self.d11 - self.d01 * self.d01
+        
+        if self.denominator < EPS:
+            self.is_valid = False
 
     @property
     def a_target(self) -> Vector:
@@ -104,9 +111,6 @@ class TransferTriangle:
         """
         :param source_co: The point in source coordinates to check.
         """
-        # returns False if the triangle is degenerate (fixing value error when calculating perc_diff)        
-        if self.source_triangle_area <= 1e-10:
-            return None
         # Find distances from the input uv_point to the vertices
         pa = (source_co - self.a_source).length
         pb = (source_co - self.b_source).length
@@ -210,12 +214,19 @@ class TransferTrianglesCollection:
         self.kd = KDTree(size=len(triangles) * 3)
         self.map = dict()
         i = 0
+        invalid_triangle_count = 0
         for tri_index, tri in enumerate(triangles):
+            # Skip invalid triangles
+            if not tri.is_valid:
+                invalid_triangle_count += 1
+                continue
             for target_vert, source_vert in zip(tri.target_verts, tri.source_verts):
                 self.kd.insert(source_vert, i)
                 self.triangles[tri_index] = tri
                 self.map[i] = tri_index
                 i += 1
+        if invalid_triangle_count != 0:
+            print(f'Invalid triangles detected and ignored: {invalid_triangle_count} from {len(triangles)}')
         self.kd.balance()
 
     def transfer_coordinates_using_closest_triangle(self, source_co: Vector) -> Vector:
@@ -314,6 +325,7 @@ def init_triangles(vertices, polygons, uv_layer, mode: int = 0):
     triangles = list()
 
     def append_tringle(target_verts, source_verts):
+        # Append triangle skipping invalid ones
         try:
             tri = TransferTriangle(target_verts, source_verts)
             triangles.append(tri)

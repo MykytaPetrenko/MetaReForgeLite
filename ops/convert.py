@@ -3,15 +3,15 @@ import bpy
 import time
 import json
 from mathutils import Vector
-from ..dev.mesh_io import mesh_to_dict, dict_to_mesh
+from .mesh_io import mesh_to_dict, dict_to_mesh
 from ..uv_link.geometry import (
     uv_transfer_initialize_target_vertices,
     uv_tranfer_initialize_triangles,
     TransferTrianglesCollection
 )
 from ..uv_link.interpolation import get_transformed
-from ..props.converter_prop import TRANSFER_CONFIGS_PATH
-from ..utils.config import get_main_prop, get_transfer_prop
+from ..props.converter_prop import TRANSFER_PRESETS_PATH
+from ..utils.config import get_main_prop, get_converter_prop
 from ..globals import MRFL_EDIT_MESHES_COLLECTION
 from ..utils.blender.collection import get_collection
 
@@ -61,64 +61,64 @@ def get_vertex_to_uv_mapping(obj):
     
     return vertex_to_uv
 
+# THIS OPERATOR IS REPLACED WITH SIMILAR WHICH HAS A PROGRESS BAR
+# class MRFL_save_wrapping_preset(bpy.types.Operator):
+#     """Saves transfer preset"""
+#     bl_idname = 'metareforge_lite.create_wrapping_preset'
+#     bl_label = 'Create Wrapping Preset [Test]'
+#     bl_options = {'REGISTER', 'UNDO'}
 
-class MRFL_save_wrapping_config(bpy.types.Operator):
-    """Saves transfer config"""
-    bl_idname = 'metareforge_lite.create_wrapping_config'
-    bl_label = 'Create Wrapping Config [Test]'
-    bl_options = {'REGISTER', 'UNDO'}
+#     preset_category: bpy.props.StringProperty(
+#         name='Preset Category', default='Custom', options={'HIDDEN'})
+#     preset_name: bpy.props.StringProperty(
+#         name='Preset Name', default='new', options={'HIDDEN'})
 
-    config_category: bpy.props.StringProperty(
-        name='Config Category', default='Custom', options={'HIDDEN'})
-    config_name: bpy.props.StringProperty(
-        name='Config Name', default='new', options={'HIDDEN'})
+#     def execute(self, context):
+#         converter_prop = get_converter_prop(context=context)
 
-    def execute(self, context):
-        converter_prop = get_transfer_prop(context=context)
-
-        source_obj = converter_prop.new_config_source_object
-        target_obj = converter_prop.new_config_target_object
+#         source_obj = converter_prop.new_preset_source_object
+#         target_obj = converter_prop.new_preset_target_object
         
-        if not source_obj or not target_obj:
-            self.report({'ERROR'}, 'Please select both source and target objects')
-            return {'CANCELLED'}
+#         if not source_obj or not target_obj:
+#             self.report({'ERROR'}, 'Please select both source and target objects')
+#             return {'CANCELLED'}
         
         
-        target_mesh = target_obj.data
+#         target_mesh = target_obj.data
         
-        if source_obj.type != 'MESH' or target_obj.type != 'MESH':
-            self.report({'ERROR'}, 'Both objects must be meshes')
-            return {'CANCELLED'}
+#         if source_obj.type != 'MESH' or target_obj.type != 'MESH':
+#             self.report({'ERROR'}, 'Both objects must be meshes')
+#             return {'CANCELLED'}
         
-        # Start timing
-        start_time = time.time()
+#         # Start timing
+#         start_time = time.time()
 
-        source_triangles = uv_tranfer_initialize_triangles(source_obj, mode=1)
-        source_triangles_collection = TransferTrianglesCollection(source_triangles)
-        target_inputs = uv_transfer_initialize_target_vertices(target_obj, mode=1)
+#         source_triangles = uv_tranfer_initialize_triangles(source_obj, mode=1)
+#         source_triangles_collection = TransferTrianglesCollection(source_triangles)
+#         target_inputs = uv_transfer_initialize_target_vertices(target_obj, mode=1)
 
-        proxy_uvs = get_transformed(source_triangles_collection, target_inputs)
+#         proxy_uvs = get_transformed(source_triangles_collection, target_inputs)
 
-        data = mesh_to_dict(target_mesh, co_3d=False, co_uv=True)
+#         data = mesh_to_dict(target_mesh, co_3d=False, co_uv=True)
 
-        proxy_uvs_list = []
-        for vert_index in range(len(target_mesh.vertices)):
-            uv, weight = proxy_uvs[vert_index][0]
-            uv = (uv[0], uv[1])
-            proxy_uvs_list.append(uv)
+#         proxy_uvs_list = []
+#         for vert_index in range(len(target_mesh.vertices)):
+#             uv, weight = proxy_uvs[vert_index][0]
+#             uv = (uv[0], uv[1])
+#             proxy_uvs_list.append(uv)
 
-        data['proxy_uvs'] = proxy_uvs_list
+#         data['proxy_uvs'] = proxy_uvs_list
 
-        config_folder = os.path.join(TRANSFER_CONFIGS_PATH, self.config_category)
-        os.makedirs(config_folder, exist_ok=True)
-        save_path = os.path.join(config_folder, f'{self.config_name}.json')
-        with open(save_path, 'w') as f:
-            json.dump(data, f, indent=2)
+#         preset_folder = os.path.join(TRANSFER_PRESETS_PATH, self.preset_category)
+#         os.makedirs(preset_folder, exist_ok=True)
+#         save_path = os.path.join(preset_folder, f'{self.preset_name}.json')
+#         with open(save_path, 'w') as f:
+#             json.dump(data, f, indent=2)
         
-        # Report timing
-        elapsed_time = time.time() - start_time
-        self.report({'INFO'}, f'Config creation completed in {elapsed_time:.2f} seconds')
-        return {'FINISHED'}
+#         # Report timing
+#         elapsed_time = time.time() - start_time
+#         self.report({'INFO'}, f'Preset creation completed in {elapsed_time:.2f} seconds')
+#         return {'FINISHED'}
     
 
 class MRFL_convert_to_edit_meshes(bpy.types.Operator):
@@ -127,10 +127,10 @@ class MRFL_convert_to_edit_meshes(bpy.types.Operator):
     bl_label = '[TEST] Convert to Edit Meshes'
     bl_options = {'REGISTER', 'UNDO'}
 
-    config_category: bpy.props.StringProperty(
-        name='Config Category', default='Custom', options={'HIDDEN'})
-    config_name: bpy.props.StringProperty(
-        name='Config Name', default='new', options={'HIDDEN'})
+    preset_category: bpy.props.StringProperty(
+        name='Preset Category', default='Custom', options={'HIDDEN'})
+    preset_name: bpy.props.StringProperty(
+        name='Preset Name', default='new', options={'HIDDEN'})
 
     selective_smoothing: bpy.props.BoolProperty(
         name='Selective Smooth', default=True, options={'HIDDEN'})
@@ -153,14 +153,14 @@ class MRFL_convert_to_edit_meshes(bpy.types.Operator):
         triangles = uv_tranfer_initialize_triangles(source_obj, mode=0)
         triangles_collection = TransferTrianglesCollection(triangles)
         
-        config_subfolder = os.path.join(TRANSFER_CONFIGS_PATH, self.config_category)
-        path = os.path.join(config_subfolder, f'{self.config_name}.json')
+        preset_subfolder = os.path.join(TRANSFER_PRESETS_PATH, self.preset_category)
+        path = os.path.join(preset_subfolder, f'{self.preset_name}.json')
         with open(path, 'r') as f:
             data = json.load(f)
 
         tag = data.get('tag', None)
 
-        mesh_name = self.config_name
+        mesh_name = self.preset_name
         mesh = dict_to_mesh(data, name=mesh_name)
         obj = bpy.data.objects.new(mesh_name, mesh)
         collection = get_collection(MRFL_EDIT_MESHES_COLLECTION, ensure_exist=True)
@@ -225,9 +225,7 @@ class MRFL_convert_to_edit_meshes(bpy.types.Operator):
 
 # Registration
 classes = [
-    MRFL_save_wrapping_config,
-    MRFL_convert_to_edit_meshes,
-    # MRFL_PT_wrapping_tool
+    MRFL_convert_to_edit_meshes
 ]
 
 def register():

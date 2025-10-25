@@ -1,4 +1,5 @@
 from . import (
+    converter_preset_panel,
     main_panel,
     mesh_edit_panel
 )
@@ -6,7 +7,8 @@ from . import (
 
 modules = [
     main_panel,
-    mesh_edit_panel
+    mesh_edit_panel,
+    converter_preset_panel
 ]
 
 

@@ -7,7 +7,9 @@ from . import (
     generate_template,
     export_templates,
     show_hint,
-    symmetrize_by_uvs 
+    symmetrize_by_uvs,
+    save_converter_preset,
+    refresh_converter_presets
 )
 
 
@@ -20,7 +22,9 @@ modules = [
     convert,
     generate_template,
     export_templates,
-    symmetrize_by_uvs
+    symmetrize_by_uvs,
+    save_converter_preset,
+    refresh_converter_presets
 ]
 
 

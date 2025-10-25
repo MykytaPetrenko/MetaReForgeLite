@@ -10,6 +10,7 @@ from ..ops.generate_template import MRFL_OT_generate_template_meshes
 from ..ops.show_hint import MRFL_OT_show_hint
 from ..ops.convert import MRFL_convert_to_edit_meshes
 from ..ops.export_templates import MRFL_OT_export_template_meshes
+from ..ops.refresh_converter_presets import MRFL_OT_refresh_converter_presets
 
 
 class MRFL_PT_panel(bpy.types.Panel):
@@ -21,6 +22,7 @@ class MRFL_PT_panel(bpy.types.Panel):
     bl_region_type = 'UI'
     bl_category = 'MRF-L'
     bl_context = 'objectmode'
+    
 
     def draw(self, context):
         layout = self.layout
@@ -132,42 +134,44 @@ class MRFL_PT_panel(bpy.types.Panel):
 
         # CONVERTER
         box = layout.box()
-        if dropdown(box, config, 'show_converter_section', 'Converter [Daz3D]'):
-            transfer_prop = context.scene.mrfl_converter_prop
-
+        if dropdown(box, config, 'show_converter_section', 'Converter [UV Based]'):
+            converter_prop = context.scene.mrfl_converter_prop
+            other_box = box.box()
+            row = other_box.row()
+            row.label(text='Preset:')
+            row.operator(MRFL_OT_refresh_converter_presets.bl_idname, text='', icon='FILE_REFRESH')
+            # Preset category dropdown
+            other_box.prop(converter_prop, "preset_category")
             
-            # Category dropdown
-            box.prop(transfer_prop, "category")
-            
-            # Config dropdown (only show if category is selected)
-            if transfer_prop.category and transfer_prop.category != 'NONE':
-                box.prop(transfer_prop, "config")
+            # Preset dropdown (only show if category is selected)
+            if converter_prop.preset_category and converter_prop.preset_category != 'NONE':
+                other_box.prop(converter_prop, "preset_name")
 
             # Object selection
-            box.prop(transfer_prop, 'source_object', text='Source')
+            box.prop(converter_prop, 'source_object', text='Source')
 
-            box.prop(transfer_prop, 'selective_smoothing', toggle=1)
+            box.prop(converter_prop, 'selective_smoothing', toggle=1)
             col = box.column()
-            col.prop(transfer_prop, 'selective_smoothing_factor')
-            col.prop(transfer_prop, 'selective_smoothing_repeats')
-            col.enabled = transfer_prop.selective_smoothing
+            col.prop(converter_prop, 'selective_smoothing_factor')
+            col.prop(converter_prop, 'selective_smoothing_repeats')
+            col.enabled = converter_prop.selective_smoothing
 
-            box.prop(transfer_prop, 'full_smoothing', toggle=1)
+            box.prop(converter_prop, 'full_smoothing', toggle=1)
             col = box.column()
-            col.prop(transfer_prop, 'full_smoothing_factor')
-            col.prop(transfer_prop, 'full_smoothing_repeats')
-            col.enabled = transfer_prop.full_smoothing
+            col.prop(converter_prop, 'full_smoothing_factor')
+            col.prop(converter_prop, 'full_smoothing_repeats')
+            col.enabled = converter_prop.full_smoothing
             
             # Transfer button
             op = box.operator(MRFL_convert_to_edit_meshes.bl_idname, text='Convert to Edit Mesh')
-            op.selective_smoothing = transfer_prop.selective_smoothing
-            op.selective_smoothing_factor = transfer_prop.selective_smoothing_factor
-            op.selective_smoothing_repeats = transfer_prop.selective_smoothing_repeats
-            op.full_smoothing = transfer_prop.full_smoothing
-            op.full_smoothing_factor = transfer_prop.full_smoothing_factor
-            op.full_smoothing_repeats = transfer_prop.full_smoothing_repeats
-            op.config_category = transfer_prop.category
-            op.config_name = transfer_prop.config
+            op.selective_smoothing = converter_prop.selective_smoothing
+            op.selective_smoothing_factor = converter_prop.selective_smoothing_factor
+            op.selective_smoothing_repeats = converter_prop.selective_smoothing_repeats
+            op.full_smoothing = converter_prop.full_smoothing
+            op.full_smoothing_factor = converter_prop.full_smoothing_factor
+            op.full_smoothing_repeats = converter_prop.full_smoothing_repeats
+            op.preset_category = converter_prop.preset_category
+            op.preset_name = converter_prop.preset_name
 
         
 
