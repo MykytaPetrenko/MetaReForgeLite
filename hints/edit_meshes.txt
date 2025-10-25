@@ -1,0 +1,5 @@
+These are the meshes that will be edited in Blender.
+
+The key advantage is that the head and body are merged into a single mesh, eliminating concerns that topology changes might render the mesh unusable as a conformal template in Unreal Engine. Additionally, working with a seamless, unified mesh makes it significantly easier to align the head and body.
+
+Teeth and eyes are optional - you can assign mesh objects in the corresponding properties or leave them empty.

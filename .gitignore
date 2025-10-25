@@ -1,0 +1,7 @@
+/__pycache__
+*.dll
+*.pyd
+*.pyc
+*.pdf
+/.idea
+.vscode/
